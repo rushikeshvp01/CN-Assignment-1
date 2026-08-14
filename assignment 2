@@ -1,0 +1,133 @@
+Python code for Assignment No. 2: Hamming Code Error Detection and Correction.
+
+It implements:
+
+Hamming Code encoding
+Parity bit calculation
+Single-bit error introduction
+Error detection
+Error correction
+Original data recovery
+
+
+def calculate_parity_bits(data):
+    m = len(data)
+    r = 0
+
+    while (2 ** r) < (m + r + 1):
+        r += 1
+
+    total_bits = m + r
+    code = [0] * (total_bits + 1)
+
+    data_index = 0
+    for position in range(1, total_bits + 1):
+        if position & (position - 1):
+            code[position] = int(data[data_index])
+            data_index += 1
+
+    for parity_position in [1, 2, 4, 8, 16]:
+        if parity_position > total_bits:
+            break
+
+        parity = 0
+        for position in range(1, total_bits + 1):
+            if position & parity_position:
+                parity ^= code[position]
+
+        code[parity_position] = parity
+
+    return code, r
+
+
+def introduce_error(code, position):
+    if 1 <= position < len(code):
+        code[position] ^= 1
+
+
+def detect_and_correct(code):
+    total_bits = len(code) - 1
+    error_position = 0
+    parity_position = 1
+
+    while parity_position <= total_bits:
+        parity = 0
+
+        for position in range(1, total_bits + 1):
+            if position & parity_position:
+                parity ^= code[position]
+
+        if parity:
+            error_position += parity_position
+
+        parity_position *= 2
+
+    if error_position == 0:
+        print("Receiver: No error detected.")
+    else:
+        print("Receiver: Error detected at position:", error_position)
+        code[error_position] ^= 1
+        print("Receiver: Error corrected.")
+
+    return code
+
+
+def extract_data(code):
+    data = []
+
+    for position in range(1, len(code)):
+        if position & (position - 1):
+            data.append(str(code[position]))
+
+    return ''.join(data)
+
+
+# Transmitter Side
+data = input("Enter data bits: ")
+
+codeword, parity_bits = calculate_parity_bits(data)
+
+print("\n--- TRANSMITTER SIDE ---")
+print("Original data:", data)
+print("Number of parity bits:", parity_bits)
+print("Generated codeword:", ''.join(map(str, codeword[1:])))
+
+
+# Receiver Side - Correct Data
+received_code = codeword.copy()
+
+print("\n--- RECEIVER SIDE ---")
+print("Received codeword:", ''.join(map(str, received_code[1:])))
+
+corrected_code = detect_and_correct(received_code)
+
+print("Corrected codeword:", ''.join(map(str, corrected_code[1:])))
+print("Recovered data:", extract_data(corrected_code))
+
+CODE:
+
+
+# Receiver Side - With Error
+error_position = int(
+    input("\nEnter position to introduce an error (0 for no error): ")
+)
+
+error_code = codeword.copy()
+
+if error_position != 0:
+    introduce_error(error_code, error_position)
+
+print("\n--- RECEIVER SIDE WITH ERROR ---")
+print("Received codeword:", ''.join(map(str, error_code[1:])))
+
+corrected_error_code = detect_and_correct(error_code)
+
+print(
+    "Corrected codeword:",
+    ''.join(map(str, corrected_error_code[1:]))
+)
+
+print(
+    "Recovered data:",
+    extract_data(corrected_error_code)
+)
