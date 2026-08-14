@@ -1,6 +1,28 @@
- // 2. Calculate the core subnetting details
+#include <iostream>
+using namespace std;
+
+int main() {
+    int o1, o2, o3, o4;
+    int cidr;
+
+    // Input IP address and CIDR
+    cout << "Enter IP address (e.g. 192.168.1.0): ";
+    char dot;
+    cin >> o1 >> dot >> o2 >> dot >> o3 >> dot >> o4;
+
+    cout << "Enter CIDR prefix (24-30): /";
+    cin >> cidr;
+
+    // Validate CIDR
+    if (cidr < 24 || cidr > 30) {
+        cout << "This program supports CIDR values from /24 to /30 only."
+             << endl;
+        return 1;
+    }
+
+    // Calculate core subnetting details
     int hostBits = 32 - cidr;
-    int blockSize = pow(2, hostBits);
+    int blockSize = 1 << hostBits;
     int numSubnets = 256 / blockSize;
     int usableHosts = blockSize - 2;
 
@@ -8,6 +30,7 @@
 
     // Display general subnet information
     cout << "\n--- General Subnet Information ---" << endl;
+
     cout << "Calculated Subnet Mask : 255.255.255."
          << lastOctetMask << endl;
 
@@ -15,9 +38,9 @@
          << usableHosts << " per subnet" << endl;
 
     cout << "Total Subnets Created : "
-         << numSubnets << "\n" << endl;
+         << numSubnets << endl << endl;
 
-    // 3 & 4. Calculate and Display specifics for each subnet
+    // Calculate and display each subnet
     for (int i = 0; i < numSubnets; ++i) {
 
         int network = i * blockSize;
@@ -30,25 +53,26 @@
         cout << "=========================================" << endl;
 
         cout << "Network Address : "
-             << o1 << "." << o2 << "." << o3 << "." << network << endl;
+             << o1 << "." << o2 << "." << o3 << "." << network
+             << endl;
 
-        cout << "First Host : "
-             << o1 << "." << o2 << "." << o3 << "." << firstHost << endl;
+        cout << "First Host      : "
+             << o1 << "." << o2 << "." << o3 << "." << firstHost
+             << endl;
 
-        cout << "Last Host : "
-             << o1 << "." << o2 << "." << o3 << "." << lastHost << endl;
+        cout << "Last Host       : "
+             << o1 << "." << o2 << "." << o3 << "." << lastHost
+             << endl;
 
         cout << "Broadcast Address : "
              << o1 << "." << o2 << "." << o3 << "." << broadcast
              << endl;
 
-        // Print all usable IP addresses in this subnet
+        // Print all usable IP addresses
         cout << "\nUsable IP Addresses:" << endl;
 
         for (int j = firstHost; j <= lastHost; ++j) {
-            cout << " "
-                 << o1 << "." << o2 << "." << o3 << "." << j
-                 << endl;
+            cout << o1 << "." << o2 << "." << o3 << "." << j << endl;
         }
 
         cout << endl;
