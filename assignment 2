@@ -1,41 +1,36 @@
-Python code for Assignment No. 2: Hamming Code Error Detection and Correction.
-
-It implements:
-
-Hamming Code encoding
-Parity bit calculation
-Single-bit error introduction
-Error detection
-Error correction
-Original data recovery
-
-
 def calculate_parity_bits(data):
     m = len(data)
     r = 0
 
+    # Calculate number of parity bits
     while (2 ** r) < (m + r + 1):
         r += 1
 
     total_bits = m + r
+
+    # Index 0 is unused; Hamming positions start from 1
     code = [0] * (total_bits + 1)
 
+    # Place data bits in non-power-of-2 positions
     data_index = 0
+
     for position in range(1, total_bits + 1):
-        if position & (position - 1):
+        if (position & (position - 1)) != 0:
             code[position] = int(data[data_index])
             data_index += 1
 
-    for parity_position in [1, 2, 4, 8, 16]:
-        if parity_position > total_bits:
-            break
+    # Calculate parity bits
+    parity_position = 1
 
+    while parity_position <= total_bits:
         parity = 0
+
         for position in range(1, total_bits + 1):
             if position & parity_position:
                 parity ^= code[position]
 
         code[parity_position] = parity
+        parity_position *= 2
 
     return code, r
 
@@ -43,13 +38,17 @@ def calculate_parity_bits(data):
 def introduce_error(code, position):
     if 1 <= position < len(code):
         code[position] ^= 1
+    else:
+        print("Invalid error position!")
 
 
 def detect_and_correct(code):
     total_bits = len(code) - 1
     error_position = 0
+
     parity_position = 1
 
+    # Calculate syndrome
     while parity_position <= total_bits:
         parity = 0
 
@@ -62,12 +61,18 @@ def detect_and_correct(code):
 
         parity_position *= 2
 
+    # Detect and correct error
     if error_position == 0:
         print("Receiver: No error detected.")
-    else:
+    elif error_position <= total_bits:
         print("Receiver: Error detected at position:", error_position)
+
+        # Correct the bit
         code[error_position] ^= 1
+
         print("Receiver: Error corrected.")
+    else:
+        print("Receiver: Invalid error detected.")
 
     return code
 
@@ -76,14 +81,23 @@ def extract_data(code):
     data = []
 
     for position in range(1, len(code)):
-        if position & (position - 1):
+        # Data bits are stored at non-power-of-2 positions
+        if (position & (position - 1)) != 0:
             data.append(str(code[position]))
 
     return ''.join(data)
 
 
-# Transmitter Side
+# ==============================
+# TRANSMITTER SIDE
+# ==============================
+
 data = input("Enter data bits: ")
+
+# Validate input
+if not data or any(bit not in "01" for bit in data):
+    print("Error: Please enter only binary digits (0 and 1).")
+    exit()
 
 codeword, parity_bits = calculate_parity_bits(data)
 
@@ -93,7 +107,10 @@ print("Number of parity bits:", parity_bits)
 print("Generated codeword:", ''.join(map(str, codeword[1:])))
 
 
-# Receiver Side - Correct Data
+# ==============================
+# RECEIVER SIDE - NO ERROR
+# ==============================
+
 received_code = codeword.copy()
 
 print("\n--- RECEIVER SIDE ---")
@@ -101,13 +118,16 @@ print("Received codeword:", ''.join(map(str, received_code[1:])))
 
 corrected_code = detect_and_correct(received_code)
 
-print("Corrected codeword:", ''.join(map(str, corrected_code[1:])))
+print("Corrected codeword:",
+      ''.join(map(str, corrected_code[1:])))
+
 print("Recovered data:", extract_data(corrected_code))
 
-CODE:
 
+# ==============================
+# RECEIVER SIDE - WITH ERROR
+# ==============================
 
-# Receiver Side - With Error
 error_position = int(
     input("\nEnter position to introduce an error (0 for no error): ")
 )
@@ -118,16 +138,13 @@ if error_position != 0:
     introduce_error(error_code, error_position)
 
 print("\n--- RECEIVER SIDE WITH ERROR ---")
-print("Received codeword:", ''.join(map(str, error_code[1:])))
+print("Received codeword:",
+      ''.join(map(str, error_code[1:])))
 
 corrected_error_code = detect_and_correct(error_code)
 
-print(
-    "Corrected codeword:",
-    ''.join(map(str, corrected_error_code[1:]))
-)
+print("Corrected codeword:",
+      ''.join(map(str, corrected_error_code[1:])))
 
-print(
-    "Recovered data:",
-    extract_data(corrected_error_code)
-)
+print("Recovered data:",
+      extract_data(corrected_error_code))
