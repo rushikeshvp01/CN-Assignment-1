@@ -1,0 +1,51 @@
+CN Assignment 3 – Subnetting:
+
+IP Address Input – Takes IP address and CIDR prefix from the user.
+Network Calculation – Finds the original network address, subnet mask, CIDR, and broadcast address.
+Number of Subnets – Takes the required number of subnets.
+Bits Borrowed – Calculates how many host bits need to be borrowed.
+New Subnet Mask – Calculates the new CIDR and subnet mask.
+Subnet Details – Displays for each subnet:
+Network address
+Subnet mask
+CIDR
+First host
+Last host
+Broadcast address
+Total addresses
+Usable hosts
+Validation – Checks invalid IP/CIDR and invalid number of subnets.
+Final Output – Displays that subnetting was completed successfully
+
+
+CODE:
+
+import ipaddress
+
+ip = input("Enter IP address: ")
+prefix = int(input("Enter CIDR prefix (e.g., 24): "))
+subnets = int(input("Enter number of subnets: "))
+
+network = ipaddress.ip_network(f"{ip}/{prefix}", strict=False)
+
+new_prefix = prefix + (subnets - 1).bit_length()
+
+print("\nOriginal Network:", network)
+print("New Subnet Mask:", ipaddress.IPv4Network(f"0.0.0.0/{new_prefix}").netmask)
+print("New CIDR:", f"/{new_prefix}")
+
+print("\n--- SUBNET DETAILS ---")
+
+for i, subnet in enumerate(network.subnets(new_prefix=new_prefix), 1):
+    hosts = list(subnet.hosts())
+
+    print(f"\nSubnet {i}:")
+    print("Network Address :", subnet.network_address)
+    print("First Host      :", hosts[0] if hosts else "N/A")
+    print("Last Host       :", hosts[-1] if hosts else "N/A")
+    print("Broadcast Address:", subnet.broadcast_address)
+    print("Total Addresses :", subnet.num_addresses)
+    print("Usable Hosts    :", len(hosts))
+
+    if i == subnets:
+        break
